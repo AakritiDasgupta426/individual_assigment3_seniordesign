@@ -1,0 +1,118 @@
+{
+  "microcontrollers": [
+    {
+      "id": "arduino_uno_r3",
+      "name": "Arduino Uno R3",
+      "logic_voltage": 5.0,
+      "interfaces": ["I2C", "SPI", "UART"],
+      "available_pins": 14,
+      "price": 27.60
+    },
+    {
+      "id": "raspberry_pi_pico",
+      "name": "Raspberry Pi Pico",
+      "logic_voltage": 3.3,
+      "interfaces": ["I2C", "SPI", "UART"],
+      "available_pins": 26,
+      "price": 4.00
+    },
+    {
+      "id": "esp32_devkit_v1",
+      "name": "ESP32 DevKit V1",
+      "logic_voltage": 3.3,
+      "interfaces": ["I2C", "SPI", "UART"],
+      "available_pins": 25,
+      "price": 9.99
+    },
+    {
+      "id": "arduino_nano_33_iot",
+      "name": "Arduino Nano 33 IoT",
+      "logic_voltage": 3.3,
+      "interfaces": ["I2C", "SPI", "UART"],
+      "available_pins": 14,
+      "price": 24.30
+    },
+    {
+      "id": "attiny85_breakout",
+      "name": "ATtiny85 Breakout",
+      "logic_voltage": 5.0,
+      "interfaces": ["I2C", "SPI"],
+      "available_pins": 5,
+      "price": 7.95
+    }
+  ],
+  "modules": [
+    {
+      "id": "bme280",
+      "name": "BME280 Environmental Sensor",
+      "min_logic_voltage": 1.8,
+      "max_logic_voltage": 3.6,
+      "interfaces": ["I2C", "SPI"],
+      "required_pins": 2,
+      "price": 8.99
+    },
+    {
+      "id": "dht22",
+      "name": "DHT22 Temperature/Humidity Sensor",
+      "min_logic_voltage": 3.3,
+      "max_logic_voltage": 5.5,
+      "interfaces": ["Digital"],
+      "required_pins": 1,
+      "price": 9.50
+    },
+    {
+      "id": "hc_sr04",
+      "name": "HC-SR04 Ultrasonic Sensor",
+      "min_logic_voltage": 5.0,
+      "max_logic_voltage": 5.0,
+      "interfaces": ["Digital"],
+      "required_pins": 2,
+      "price": 3.25
+    },
+    {
+      "id": "mpu6050",
+      "name": "MPU-6050 Accelerometer/Gyroscope",
+      "min_logic_voltage": 3.0,
+      "max_logic_voltage": 3.6,
+      "interfaces": ["I2C"],
+      "required_pins": 2,
+      "price": 5.49
+    },
+    {
+      "id": "nrf24l01",
+      "name": "nRF24L01 Radio Module",
+      "min_logic_voltage": 1.9,
+      "max_logic_voltage": 3.6,
+      "interfaces": ["SPI"],
+      "required_pins": 5,
+      "price": 6.75
+    },
+    {
+      "id": "neo_6m",
+      "name": "NEO-6M GPS Module",
+      "min_logic_voltage": 3.0,
+      "max_logic_voltage": 5.0,
+      "interfaces": ["UART"],
+      "required_pins": 2,
+      "price": 12.99
+    },
+    {
+      "id": "mcp3008",
+      "name": "MCP3008 ADC",
+      "min_logic_voltage": 2.7,
+      "max_logic_voltage": 5.5,
+      "interfaces": ["SPI"],
+      "required_pins": 4,
+      "price": 4.25
+    },
+    {
+      "id": "uart_camera",
+      "name": "UART Camera Module",
+      "min_logic_voltage": 3.3,
+      "max_logic_voltage": 3.3,
+      "interfaces": ["UART"],
+      "required_pins": 6,
+      "price": 18.50
+    }
+  ]
+}
