@@ -1,5 +1,4 @@
-# Part Pair — Embedded Component Compatibility Checker
-
+# Compaitibility Check
 A Python and Streamlit prototype for checking whether a microcontroller and a sensor or module can work together. Developed for Senior Design Individual Assignment 3.
 
 ## Features
