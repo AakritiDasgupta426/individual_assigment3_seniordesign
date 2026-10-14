@@ -79,3 +79,112 @@ def check_compatibility(controller, module):
 def compatible_modules(controller, modules):
     matches = [module for module in modules if check_compatibility(controller, module)[0]]
     return sorted(matches, key=lambda module: module["price"])
+
+
+BUS_PINS = {"I2C": 2, "SPI": 3}
+
+
+def dedicated_pins(module, interface):
+    if interface == "I2C":
+        return max(0, module["required_pins"] - BUS_PINS["I2C"])
+    if interface == "SPI":
+        return max(1, module["required_pins"] - BUS_PINS["SPI"])
+    return module["required_pins"]
+
+
+def build_project(controller, modules):
+    result = {
+        "compatible": False,
+        "checks": [],
+        "assignments": [],
+        "pins_used": 0,
+        "current_ma": 0,
+        "total_price": controller.get("price", 0),
+    }
+
+    if not modules:
+        result["checks"].append(("Modules", False, "Select at least one module."))
+        return result
+
+    failing = []
+    for module in modules:
+        ok, pair_checks = check_compatibility(controller, module)
+        if not ok:
+            reasons = [label for label, passed, _ in pair_checks if not passed]
+            failing.append(module["name"] + " (" + ", ".join(reasons).lower() + ")")
+    if failing:
+        result["checks"].append(("Each module", False, "Not compatible with this board: " + "; ".join(failing) + "."))
+        return result
+    result["checks"].append(("Each module", True, "Every module passes the voltage, interface, and pin checks on its own."))
+
+    used_addresses = {}
+    conflicts = []
+    buses_used = set()
+    uart_devices = 0
+
+    for module in modules:
+        interface = module["interfaces"][0]
+        address = module.get("i2c_address")
+
+        if interface == "I2C" and address in used_addresses:
+            conflicts.append(module["name"] + " and " + used_addresses[address] + " both use " + address)
+
+        if interface == "I2C" and address:
+            used_addresses.setdefault(address, module["name"])
+
+        if interface in BUS_PINS:
+            buses_used.add(interface)
+
+        if interface == "UART":
+            uart_devices += 1
+
+        pins = dedicated_pins(module, interface)
+        result["assignments"].append({
+            "module": module["name"],
+            "interface": interface,
+            "shared_pins": BUS_PINS.get(interface, 0),
+            "dedicated_pins": pins,
+            "i2c_address": address if interface == "I2C" else "",
+            "current_ma": module["current_ma"],
+            "price": module["price"],
+        })
+
+    bus_pins = sum(BUS_PINS[bus] for bus in buses_used)
+    pins_used = bus_pins + sum(row["dedicated_pins"] for row in result["assignments"])
+    current_ma = sum(module["current_ma"] for module in modules)
+
+    result["pins_used"] = pins_used
+    result["current_ma"] = current_ma
+    result["total_price"] = controller["price"] + sum(module["price"] for module in modules)
+
+    if buses_used:
+        bus_text = ", ".join(f"{bus} ({BUS_PINS[bus]} shared)" for bus in sorted(buses_used))
+    else:
+        bus_text = "none"
+
+    result["checks"].extend([
+        (
+            "I2C addresses",
+            not conflicts,
+            "Address conflict: " + "; ".join(conflicts) + "." if conflicts
+            else "Every I2C device has a unique address.",
+        ),
+        (
+            "UART ports",
+            uart_devices <= controller["uart_ports"],
+            f"{uart_devices} UART device(s); controller has {controller['uart_ports']} port(s).",
+        ),
+        (
+            "Pins",
+            pins_used <= controller["available_pins"],
+            f"{pins_used} of {controller['available_pins']} pins used. Buses: {bus_text}.",
+        ),
+        (
+            "Power",
+            current_ma <= controller["supply_current_ma"],
+            f"Modules draw {current_ma:g} mA; board can supply "
+            f"{controller['supply_current_ma']} mA.",
+        ),
+    ])
+    result["compatible"] = all(passed for _, passed, _ in result["checks"])
+    return result

@@ -1,0 +1,6 @@
+*
+
+!*.py
+!*.json
+!*.md
+!.gitignore

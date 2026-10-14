@@ -6,6 +6,8 @@
       "logic_voltage": 5.0,
       "interfaces": ["I2C", "SPI", "UART"],
       "available_pins": 14,
+      "uart_ports": 1,
+      "supply_current_ma": 400,
       "price": 27.60
     },
     {
@@ -14,6 +16,8 @@
       "logic_voltage": 3.3,
       "interfaces": ["I2C", "SPI", "UART"],
       "available_pins": 26,
+      "uart_ports": 2,
+      "supply_current_ma": 300,
       "price": 4.00
     },
     {
@@ -22,6 +26,8 @@
       "logic_voltage": 3.3,
       "interfaces": ["I2C", "SPI", "UART"],
       "available_pins": 25,
+      "uart_ports": 2,
+      "supply_current_ma": 350,
       "price": 9.99
     },
     {
@@ -30,6 +36,8 @@
       "logic_voltage": 3.3,
       "interfaces": ["I2C", "SPI", "UART"],
       "available_pins": 14,
+      "uart_ports": 1,
+      "supply_current_ma": 300,
       "price": 24.30
     },
     {
@@ -38,6 +46,8 @@
       "logic_voltage": 5.0,
       "interfaces": ["I2C", "SPI"],
       "available_pins": 5,
+      "uart_ports": 0,
+      "supply_current_ma": 200,
       "price": 7.95
     }
   ],
@@ -47,8 +57,10 @@
       "name": "BME280 Environmental Sensor",
       "min_logic_voltage": 1.8,
       "max_logic_voltage": 3.6,
-      "interfaces": ["I2C", "SPI"],
+      "interfaces": ["I2C"],
       "required_pins": 2,
+      "i2c_address": "0x76",
+      "current_ma": 1,
       "price": 8.99
     },
     {
@@ -58,6 +70,7 @@
       "max_logic_voltage": 5.5,
       "interfaces": ["Digital"],
       "required_pins": 1,
+      "current_ma": 1.5,
       "price": 9.50
     },
     {
@@ -67,6 +80,7 @@
       "max_logic_voltage": 5.0,
       "interfaces": ["Digital"],
       "required_pins": 2,
+      "current_ma": 15,
       "price": 3.25
     },
     {
@@ -76,6 +90,8 @@
       "max_logic_voltage": 3.6,
       "interfaces": ["I2C"],
       "required_pins": 2,
+      "i2c_address": "0x68",
+      "current_ma": 4,
       "price": 5.49
     },
     {
@@ -85,6 +101,7 @@
       "max_logic_voltage": 3.6,
       "interfaces": ["SPI"],
       "required_pins": 5,
+      "current_ma": 12,
       "price": 6.75
     },
     {
@@ -94,6 +111,7 @@
       "max_logic_voltage": 5.0,
       "interfaces": ["UART"],
       "required_pins": 2,
+      "current_ma": 45,
       "price": 12.99
     },
     {
@@ -103,6 +121,7 @@
       "max_logic_voltage": 5.5,
       "interfaces": ["SPI"],
       "required_pins": 4,
+      "current_ma": 0.5,
       "price": 4.25
     },
     {
@@ -112,7 +131,30 @@
       "max_logic_voltage": 3.3,
       "interfaces": ["UART"],
       "required_pins": 6,
+      "current_ma": 100,
       "price": 18.50
+    },
+    {
+      "id": "ds3231",
+      "name": "DS3231 Real-Time Clock",
+      "min_logic_voltage": 2.3,
+      "max_logic_voltage": 5.5,
+      "interfaces": ["I2C"],
+      "required_pins": 2,
+      "i2c_address": "0x68",
+      "current_ma": 0.2,
+      "price": 13.95
+    },
+    {
+      "id": "ssd1306",
+      "name": "SSD1306 OLED Display",
+      "min_logic_voltage": 3.3,
+      "max_logic_voltage": 5.0,
+      "interfaces": ["I2C"],
+      "required_pins": 2,
+      "i2c_address": "0x3C",
+      "current_ma": 20,
+      "price": 7.50
     }
   ]
 }

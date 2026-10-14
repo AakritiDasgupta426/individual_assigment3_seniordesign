@@ -1,5 +1,8 @@
 import unittest
-from compatibility import (check_compatibility,compatible_modules,load_components)
+from compatibility import (check_compatibility,compatible_modules,load_components,build_project)
+
+def check_result(project, label):
+    return next(passed for name, passed, _ in project["checks"] if name == label)
 
 class CompatibilityTests(unittest.TestCase):
     @classmethod
@@ -86,6 +89,52 @@ class CompatibilityTests(unittest.TestCase):
             if label == "Pins"
         )
         self.assertFalse(pin_passed)
+
+    def project(self, controller_id, *module_ids):
+        return build_project(
+            self.controllers[controller_id],
+            [self.modules[module_id] for module_id in module_ids]
+        )
+
+    def test_i2c_modules_share_bus_pins(self):
+        project = self.project("raspberry_pi_pico", "bme280", "mpu6050", "ssd1306")
+        self.assertTrue(project["compatible"])
+        self.assertEqual(project["pins_used"], 2)
+
+    def test_spi_devices_each_need_chip_select(self):
+        project = self.project("raspberry_pi_pico", "nrf24l01", "mcp3008")
+        self.assertEqual(project["pins_used"], 6)
+        self.assertTrue(project["compatible"])
+
+    def test_i2c_address_conflict(self):
+        project = self.project("esp32_devkit_v1", "mpu6050", "ds3231")
+        self.assertFalse(project["compatible"])
+        self.assertFalse(check_result(project, "I2C addresses"))
+
+    def test_too_many_uart_devices(self):
+        project = self.project("arduino_nano_33_iot", "neo_6m", "uart_camera")
+        self.assertFalse(project["compatible"])
+        self.assertFalse(check_result(project, "UART ports"))
+
+    def test_combined_pins_exceed_board(self):
+        project = self.project("attiny85_breakout", "mcp3008", "hc_sr04", "dht22")
+        self.assertFalse(project["compatible"])
+        self.assertFalse(check_result(project, "Pins"))
+        self.assertEqual(project["pins_used"], 7)
+
+    def test_power_budget_exceeded(self):
+        weak_board = dict(self.controllers["raspberry_pi_pico"], supply_current_ma=50)
+        project = build_project(
+            weak_board,
+            [self.modules["neo_6m"], self.modules["ssd1306"]]
+        )
+        self.assertFalse(project["compatible"])
+        self.assertFalse(check_result(project, "Power"))
+        self.assertEqual(project["current_ma"], 65)
+
+    def test_total_price_includes_controller(self):
+        project = self.project("esp32_devkit_v1", "bme280", "neo_6m")
+        self.assertAlmostEqual(project["total_price"], 9.99 + 8.99 + 12.99)
 
 
 if __name__ == "__main__":

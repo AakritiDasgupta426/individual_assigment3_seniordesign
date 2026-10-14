@@ -1,6 +1,6 @@
 import streamlit as st
 
-from compatibility import check_compatibility, compatible_modules, load_components
+from compatibility import build_project, check_compatibility, compatible_modules, load_components
 
 
 def format_price(price):
@@ -104,6 +104,23 @@ def main():
     for item in data["modules"]:
         modules[item["name"]] = item
 
+    pair_tab, project_tab = st.tabs(["Check a pair", "Plan a project"])
+
+    with pair_tab:
+        show_pair_checker(data, controllers, modules)
+
+    with project_tab:
+        show_project_planner(controllers, modules)
+
+
+def show_check(label, passed, explanation):
+    if passed:
+        st.write("✅ **" + label + ":** " + explanation)
+    else:
+        st.write("❌ **" + label + ":** " + explanation)
+
+
+def show_pair_checker(data, controllers, modules):
     st.markdown('<p class="section-label">Choose your parts</p>', unsafe_allow_html=True)
 
     left_column, right_column = st.columns(2)
@@ -123,7 +140,7 @@ def main():
     controller = controllers[controller_name]
     module = modules[module_name]
 
-    if st.button("Check this pair", use_container_width=True):
+    if st.button("Check this pair", width="stretch"):
         compatible, checks = check_compatibility(controller, module)
 
         if compatible:
@@ -132,10 +149,7 @@ def main():
             st.error(controller_name + " and " + module_name + " are not compatible.")
 
         for label, passed, explanation in checks:
-            if passed:
-                st.write("✅ **" + label + ":** " + explanation)
-            else:
-                st.write("❌ **" + label + ":** " + explanation)
+            show_check(label, passed, explanation)
 
     st.divider()
     st.markdown(
@@ -157,9 +171,69 @@ def main():
         table_rows.append(row)
 
     if table_rows:
-        st.dataframe(table_rows, use_container_width=True, hide_index=True)
+        st.dataframe(table_rows, width="stretch", hide_index=True)
     else:
         st.info("No components in the sample data match this board yet.")
+
+
+def show_project_planner(controllers, modules):
+    st.markdown('<p class="section-label">Plan a whole build</p>', unsafe_allow_html=True)
+
+    left_column, right_column = st.columns(2)
+
+    with left_column:
+        controller_name = st.selectbox(
+            "Microcontroller",
+            list(controllers.keys()),
+            key="project_controller"
+        )
+
+    with right_column:
+        module_names = st.multiselect(
+            "Modules",
+            list(modules.keys()),
+            key="project_modules"
+        )
+
+    controller = controllers[controller_name]
+    selected_modules = [modules[name] for name in module_names]
+
+    if st.button("Check this project", width="stretch"):
+        project = build_project(controller, selected_modules)
+
+        if project["compatible"]:
+            st.success("This build works on the " + controller_name + "!")
+        else:
+            st.error("This build does not work on the " + controller_name + ".")
+
+        for label, passed, explanation in project["checks"]:
+            show_check(label, passed, explanation)
+
+        if project["assignments"]:
+            st.write("**Total Cost:** " + format_price(project["total_price"]))
+
+            st.divider()
+            st.markdown('<p class="section-label">Pin plan</p>', unsafe_allow_html=True)
+            st.caption(
+                "Shared pins belong to a bus (I2C or SPI) and are counted once no matter how "
+                "many modules use it. Dedicated pins are used by that module alone."
+            )
+
+            table_rows = []
+
+            for item in project["assignments"]:
+                row = {
+                    "Component": item["module"],
+                    "Connection": item["interface"],
+                    "I2C address": item["i2c_address"],
+                    "Shared pins": item["shared_pins"],
+                    "Dedicated pins": item["dedicated_pins"],
+                    "Current (mA)": item["current_ma"],
+                    "Price": format_price(item["price"])
+                }
+                table_rows.append(row)
+
+            st.dataframe(table_rows, width="stretch", hide_index=True)
 
 
 if __name__ == "__main__":
