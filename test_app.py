@@ -1,5 +1,7 @@
 import unittest
-from compatibility import (check_compatibility,compatible_modules,load_components,build_project)
+import csv
+import io
+from compatibility import (check_compatibility,compatible_modules,load_components,build_project,generate_bom)
 
 def check_result(project, label):
     return next(passed for name, passed, _ in project["checks"] if name == label)
@@ -135,6 +137,67 @@ class CompatibilityTests(unittest.TestCase):
     def test_total_price_includes_controller(self):
         project = self.project("esp32_devkit_v1", "bme280", "neo_6m")
         self.assertAlmostEqual(project["total_price"], 9.99 + 8.99 + 12.99)
+
+    def test_bom_pico_example(self):
+        bom = generate_bom(
+            self.controllers["raspberry_pi_pico"],
+            [self.modules["bme280"], self.modules["mpu6050"], self.modules["neo_6m"]]
+        )
+        self.assertEqual(len(bom), 4)
+        self.assertEqual(bom[0]["name"], "Raspberry Pi Pico")
+        self.assertEqual(bom[0]["type"], "Microcontroller")
+        self.assertEqual(bom[1]["name"], "BME280 Environmental Sensor")
+        self.assertEqual(bom[1]["type"], "Module")
+        total = sum(item["unit_price"] for item in bom)
+        self.assertAlmostEqual(total, 31.47, places=2)
+
+    def test_bom_empty_selection(self):
+        bom = generate_bom(self.controllers["raspberry_pi_pico"], [])
+        self.assertEqual(len(bom), 1)
+        self.assertEqual(bom[0]["type"], "Microcontroller")
+
+    def test_bom_csv_format(self):
+        bom = generate_bom(
+            self.controllers["raspberry_pi_pico"],
+            [self.modules["bme280"], self.modules["mpu6050"], self.modules["neo_6m"]]
+        )
+        output = io.StringIO()
+        writer = csv.DictWriter(
+            output,
+            fieldnames=["Component ID", "Name", "Type", "Quantity", "Unit Price"]
+        )
+        writer.writeheader()
+        for row in bom:
+            writer.writerow({
+                "Component ID": row["id"],
+                "Name": row["name"],
+                "Type": row["type"],
+                "Quantity": row["quantity"],
+                "Unit Price": f"${row['unit_price']:.2f}"
+            })
+
+        csv_output = output.getvalue()
+        reader = csv.DictReader(io.StringIO(csv_output))
+        rows = list(reader)
+
+        self.assertEqual(len(rows), 4)
+        self.assertEqual(rows[0]["Name"], "Raspberry Pi Pico")
+        self.assertEqual(rows[0]["Type"], "Microcontroller")
+        self.assertEqual(rows[1]["Name"], "BME280 Environmental Sensor")
+        self.assertEqual(rows[1]["Type"], "Module")
+
+        total = sum(float(row["Unit Price"].strip("$")) for row in rows)
+        self.assertAlmostEqual(total, 31.47, places=2)
+
+    def test_bom_with_incompatible_build(self):
+        bom = generate_bom(
+            self.controllers["arduino_uno_r3"],
+            [self.modules["bme280"]]
+        )
+        self.assertEqual(len(bom), 2)
+        total = sum(item["unit_price"] for item in bom)
+        self.assertAlmostEqual(total, 27.60 + 8.99, places=2)
+
 
 
 if __name__ == "__main__":

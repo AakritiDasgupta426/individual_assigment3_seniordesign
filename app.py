@@ -1,10 +1,31 @@
 import streamlit as st
+import csv
+import io
 
-from compatibility import build_project, check_compatibility, compatible_modules, load_components
+from compatibility import build_project, check_compatibility, compatible_modules, load_components, generate_bom
 
 
 def format_price(price):
     return f"${price:.2f}"
+
+
+def bom_to_csv(bom_rows):
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=["Component ID", "Name", "Type", "Quantity", "Unit Price"]
+    )
+    writer.writeheader()
+    for row in bom_rows:
+        writer.writerow({
+            "Component ID": row["id"],
+            "Name": row["name"],
+            "Type": row["type"],
+            "Quantity": row["quantity"],
+            "Unit Price": format_price(row["unit_price"])
+        })
+    return output.getvalue()
+
 
 
 def main():
@@ -234,6 +255,37 @@ def show_project_planner(controllers, modules):
                 table_rows.append(row)
 
             st.dataframe(table_rows, width="stretch", hide_index=True)
+
+    if module_names:
+        st.divider()
+        st.markdown('<p class="section-label">Bill of Materials</p>', unsafe_allow_html=True)
+
+        bom = generate_bom(controller, selected_modules)
+        bom_rows = []
+        total_price = 0
+
+        for item in bom:
+            bom_rows.append({
+                "Component ID": item["id"],
+                "Name": item["name"],
+                "Type": item["type"],
+                "Quantity": item["quantity"],
+                "Unit Price": format_price(item["unit_price"])
+            })
+            total_price += item["unit_price"]
+
+        st.dataframe(bom_rows, width="stretch", hide_index=True)
+        st.write("**BOM Total:** " + format_price(total_price))
+
+        csv_data = bom_to_csv(bom)
+        st.download_button(
+            label="Download BOM CSV",
+            data=csv_data,
+            file_name="bom.csv",
+            mime="text/csv",
+            width="stretch"
+        )
+
 
 
 if __name__ == "__main__":

@@ -92,6 +92,26 @@ def dedicated_pins(module, interface):
     return module["required_pins"]
 
 
+def generate_bom(controller, modules):
+    bom = []
+    bom.append({
+        "id": controller.get("id", ""),
+        "name": controller["name"],
+        "type": "Microcontroller",
+        "quantity": 1,
+        "unit_price": controller.get("price", 0),
+    })
+    for module in modules:
+        bom.append({
+            "id": module.get("id", ""),
+            "name": module["name"],
+            "type": "Module",
+            "quantity": 1,
+            "unit_price": module.get("price", 0),
+        })
+    return bom
+
+
 def build_project(controller, modules):
     result = {
         "compatible": False,
